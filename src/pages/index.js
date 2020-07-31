@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react'
 import useInterval from '@use-it/interval'
 import { Vector2 } from 'three'
-import { extend, Canvas, useFrame, useUpdate } from 'react-three-fiber'
+import { extend, Canvas, useFrame } from 'react-three-fiber'
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial'
 import { Line2 } from 'three/examples/jsm/lines/Line2'
 import { OrthographicCamera, OrbitControls, Stats } from 'drei'
-
 
 import Layout from '../components/Layout'
 import SEO from '../components/SEO'
@@ -23,7 +22,7 @@ const getRandomIntBetween = (...args) => Math.round(getRandomBetween(...args))
 const chance = (p = 0.5) => Math.random() < p
 
 const applyDiretionAndOrientation = (point, direction, orientation) =>
-  point.map((x, i) => i === direction ? x + orientation : x)
+  point.map((x, i) => (i === direction ? x + orientation : x))
 
 const getNextPoint = points => {
   const lastPoint = getLast(points)
@@ -34,23 +33,22 @@ const getNextPoint = points => {
 
 const updatePoints = points => [...points, getNextPoint(points)]
 
-const Inner = ({ points }) => {
-  const geomRef = useUpdate(x => x.setPositions(points.flat()), [points])
-  const lineRef = useUpdate(x => x.computeLineDistances(), [points])
+const Inner = () => {
+  const [points, setPoints] = useState(initialPoints)
+  const geomRef = useRef(null)
+  const lineRef = useRef(null)
 
-  useEffect(() => {
-    if (!geomRef.current || !lineRef.current) return
-    geomRef.current.setPositions(initialPoints.flat())
-    lineRef.current.computeLineDistances()
-  }, [geomRef, lineRef])
-  
-  useEffect(() => {
-    if (!geomRef.current || !lineRef.current) return
-    geomRef.current.setPositions(points.flat())
-  }, [geomRef, points])
+  const loop = () => {
+    setPoints(points => [...points, getNextPoint(points)])
+    geomRef.current && geomRef.current.setPositions(points.flat())
+    lineRef.current && lineRef.current.computeLineDistances()
+  }
+
+  useFrame(loop)
+  useEffect(loop, [])
 
   return (
-    <line2 ref={lineRef} key={points}>
+    <line2 ref={lineRef} key={points.length}>
       <lineGeometry attach='geometry' ref={geomRef} linewidth={2} />
       <lineMaterial attach='material' color='lime' resolution={resolution} />
     </line2>
