@@ -24,11 +24,24 @@ const chance = (p = 0.5) => Math.random() < p
 const applyDiretionAndOrientation = (point, direction, orientation) =>
   point.map((x, i) => (i === direction ? x + orientation : x))
 
+const isPointsEqual = point1 => point2 => {
+  const [x1,y1,z1] = point1
+  const [x2,y2,z2] = point2
+  return x1 === x2 && y1 === y2 && z1 === z2
+}
+
 const getNextPoint = points => {
   const lastPoint = getLast(points)
   const direction = getRandomIntBetween(0, 2)
   const orientation = chance() ? -1 : 1
-  return applyDiretionAndOrientation(lastPoint, direction, orientation)
+  const newPoint = applyDiretionAndOrientation(
+    lastPoint,
+    direction,
+    orientation
+  )
+  const willCollide = isPointsEqual(newPoint)
+  if (points.some(willCollide)) return getNextPoint(points)
+  return newPoint
 }
 
 const updatePoints = points => [...points, getNextPoint(points)]
