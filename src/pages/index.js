@@ -21,8 +21,17 @@ const getRandomBetween = (min, max) => Math.random() * (max - min) + min
 const getRandomIntBetween = (...args) => Math.round(getRandomBetween(...args))
 const chance = (p = 0.5) => Math.random() < p
 
-const applyDiretionAndOrientation = (point, direction, orientation) =>
-  point.map((x, i) => (i === direction ? x + orientation : x))
+const applyDiretionAndOrientation = (point, direction, orientation) => {
+  if(!point?.length) return null
+  return point.map((x, i) => (i === direction ? x + orientation : x))
+}
+
+const applyRandomDirectionAndOrientation = point => {
+  if(!point.length) return null
+  const direction = getRandomIntBetween(0, 2)
+  const orientation = chance() ? -1 : 1
+  applyDiretionAndOrientation(point, direction, orientation)
+}
 
 const isPointsEqual = point1 => point2 => {
   const [x1,y1,z1] = point1
@@ -30,21 +39,37 @@ const isPointsEqual = point1 => point2 => {
   return x1 === x2 && y1 === y2 && z1 === z2
 }
 
+const getAdjacentPoints = point =>  [
+  [applyDiretionAndOrientation(point, 0, -1)],
+  [applyDiretionAndOrientation(point, 0, 1)],
+  [applyDiretionAndOrientation(point, 1, -1)],
+  [applyDiretionAndOrientation(point, 1, 1)],
+  [applyDiretionAndOrientation(point, 2, -1)],
+  [applyDiretionAndOrientation(point, 2, 1)],
+]
+
+const hasCompleteIntersection = a1 => a2 => a1.every(x => a2.includes(x))
+const hasCompletePointsIntersection = a1 => a2 => a1.every(x => a2.some(isPointsEqual(x)))
+
+const hasCompleteIntersectionWithAdjacentPoints = (point, points) => {
+  const adjacentPoints = getAdjacentPoints(point)
+  return hasCompletePointsIntersection(points, adjacentPoints)
+}
+
 const getNextPoint = points => {
   const lastPoint = getLast(points)
-  const direction = getRandomIntBetween(0, 2)
-  const orientation = chance() ? -1 : 1
-  const newPoint = applyDiretionAndOrientation(
-    lastPoint,
-    direction,
-    orientation
-  )
-  const willCollide = isPointsEqual(newPoint)
-  if (points.some(willCollide)) return getNextPoint(points)
+  const willCollideInevitably = hasCompleteIntersectionWithAdjacentPoints(lastPoint, points)
+  if (willCollideInevitably) return null
+  const newPoint = applyRandomDirectionAndOrientation(lastPoint)
+  const willCollideWithSomething = isPointsEqual(newPoint)
+  if (points.some(willCollideWithSomething)) return getNextPoint(points)
   return newPoint
 }
 
-const updatePoints = points => [...points, getNextPoint(points)]
+const updatePoints = points => {
+  const nextPoint = getNextPoint(points)
+  return nextPoint?.length ? [...points, nextPoint] : points  
+}
 
 const Inner = () => {
   const [points, setPoints] = useState(initialPoints)
@@ -80,5 +105,4 @@ const Home = () => (
     </Canvas>
   </Layout>
 )
-
 export default Home
