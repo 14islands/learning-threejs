@@ -68,22 +68,17 @@ const Inner = () => {
   )
 }
 
-const Home = () => {
-  const [points, setPoints] = useState(initialPoints)
-
-  useInterval(() => setPoints(updatePoints), 100)
-  return (
-    <Layout>
-      <SEO title='Home' />
-      <Canvas>
-        <OrthographicCamera>
-          <Inner points={points} />
-        </OrthographicCamera>
-        <OrbitControls />
-        <Stats />
-      </Canvas>
-    </Layout>
-  )
-}
+const Home = () => (
+  <Layout>
+    <SEO title='Home' />
+    <Canvas>
+      <OrthographicCamera>
+        <Inner />
+      </OrthographicCamera>
+      <OrbitControls />
+      <Stats />
+    </Canvas>
+  </Layout>
+)
 
 export default Home
